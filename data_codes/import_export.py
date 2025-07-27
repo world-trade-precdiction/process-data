@@ -3,7 +3,7 @@ import pandas as pd
 import time
 
 API_KEY = "55c5e320a8ed4a5984614a98d8d1ab6a"
-base_url = "https://comtradeapi.un.org/data/v1/get"
+base_url = "https://comtradeapi.un.org/data/v1/get" #키와 데이터 요청할 URL
 
 reporter_list = [
     ('4', 'Afghanistan'),
@@ -253,13 +253,12 @@ reporter_list = [
 ]
 years = list(range(2000, 2024))
 hs_codes = []
-
 for i in range(1, 100):
     x = str(i)
     if len(x) == 1:
         x = '0' + x
     hs_codes.append(x)
-
+#포함될 국가/연도/hs_code를 정리
 headers = {
     "Ocp-Apim-Subscription-Key": API_KEY
 }
@@ -277,20 +276,20 @@ for reporter_id, reporter_name in reporter_list:
                 "cmdCode": hs,
                 "includeDesc": "true"
             }
-            print(f"Fetching {year} - {reporter_name} - HS {hs}")
+            print(f"Fetching {year} - {reporter_name} - HS {hs}") #현재 진행 상황
             try:
-                response = requests.get(url, params=params, headers=headers, timeout=30)
+                response = requests.get(url, params=params, headers=headers, timeout=30) #요청
                 if response.status_code != 200:
                     print(f"Failed request (status {response.status_code}): {response.text}")
                     while response.status_code == 429:
                         time.sleep(30)
-                        response = requests.get(url, params=params, headers=headers, timeout=30)
+                        response = requests.get(url, params=params, headers=headers, timeout=30) #time limit에 걸릴 수 있으므로 제대로 데이터를 받지 못했을 경우 재시도
                     if response.status_code != 200:
                         continue
 
                 data = response.json()
                 if 'data' not in data:
-                    print(f"No data in response for {reporter_name} {year} HS{hs}")
+                    print(f"No data in response for {reporter_name} {year} HS{hs}") #데이터 없음
                     continue
 
                 for item in data['data']:
@@ -302,11 +301,11 @@ for reporter_id, reporter_name in reporter_list:
                         'hs_code': item.get('cmdCode'),
                         'commodity': item.get('cmdDesc'),
                         'trade_value_usd': item.get('primaryValue')
-                    })
+                    }) #결과에서 받은 데이터를 추가
 
             except Exception as e:
-                print(f"Request error: {e}")
+                print(f"Request error: {e}") #오류 발생 시 중단
                 continue
 
 df = pd.DataFrame(results)
-df.to_csv('import_export_data.csv', index=False, encoding='utf-8-sig')
+df.to_csv('import_export_data.csv', index=False, encoding='utf-8-sig') #csv 파일로 저장
